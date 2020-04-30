@@ -1,3 +1,6 @@
+variables: 
+ JAVA_TO_BUILD: jdk11u
+
 name: "AdoptOpenJDK-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
 
 trigger: none
@@ -5,4 +8,21 @@ trigger: none
 pr: none
 
 stages:
-  - template: ./build/build.yml
+#  - template: ./build/build.yml
+  - stage: test_macOS_x64_hotspot_binaries
+    variables:
+      #ADOPT_TEST_REPO_URI: 'https://github.com/AdoptOpenJDK/openjdk-tests'
+      ADOPT_TEST_REPO_URI: 'https://github.com/llxia/openjdk-tests'
+      #ADOPT_TEST_REPO_BRANCH: 'master'
+      ADOPT_TEST_REPO_BRANCH: 'test19'
+      ADOPT_JDK_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-$(JAVA_TO_BUILD)'
+      ADOPT_JDK_SOURCE_BRANCH: 'master'
+    jobs:
+      # - template: ./tkg/openjdk/sanity.yml
+      #   parameters:
+      #     pool:
+      #       vmImage: macOS-10.14
+      - template: ./tkg/functional/sanity.yml
+        parameters:
+          pool:
+            vmImage: macOS-10.14

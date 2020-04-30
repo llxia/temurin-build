@@ -37,41 +37,15 @@ stages:
           - template: ./steps/macOS/pre.yml
           - template: ./steps/macOS/build_hotspot.yml
           - template: ./steps/shared/post.yml
-
-  - stage: build_windows_x64_hotspot_binaries
+  - stage: test_macOS_x64_hotspot_binaries
+    dependsOn: build_macOS_x64_hotspot_binaries
     variables:
-      skipComponentGovernanceDetection: true
-      TARGET_OS: "windows"
-      ARCHITECTURE: "x64"
-    displayName: "Build Windows x64 HotSpot Binaries"
-    dependsOn: []
+      ADOPT_TEST_REPO_URI: 'https://github.com/AdoptOpenJDK/openjdk-tests'
+      ADOPT_TEST_REPO_BRANCH: 'master'
+      ADOPT_JDK_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-$(JAVA_TO_BUILD)'
+      ADOPT_JDK_SOURCE_BRANCH: 'master'
     jobs:
-      - job: build_macOS
-        timeoutInMinutes: 120
-        displayName: "Build Windows x64 HotSpot"
-        pool:
-          vmImage: vs2017-win2016
-        steps:
-          - template: ./steps/shared/pre.yml
-          - template: ./steps/windows/pre.yml
-          - template: ./steps/windows/build_hotspot.yml
-          - template: ./steps/shared/post.yml
-
-  - stage: build_windows_x86_hotspot_binaries
-    variables:
-      skipComponentGovernanceDetection: true
-      TARGET_OS: "windows"
-      ARCHITECTURE: "x86-32"
-    displayName: "Build Windows x86 HotSpot Binaries"
-    dependsOn: []
-    jobs:
-      - job: build_macOS
-        timeoutInMinutes: 120
-        displayName: "Build Windows x86 HotSpot"
-        pool:
-          vmImage: vs2017-win2016
-        steps:
-          - template: ./steps/shared/pre.yml
-          - template: ./steps/windows/pre.yml
-          - template: ./steps/windows/build_hotspot.yml
-          - template: ./steps/shared/post.yml
+      - template: ../test/openjdk/sanity.yml
+        parameters:
+          pool:
+            vmImage: macOS-10.14

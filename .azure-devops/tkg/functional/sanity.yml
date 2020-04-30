@@ -1,0 +1,21 @@
+parameters:
+  buildList: "openjdk"
+  testTarget: "_jdk_math_j9"
+  failTaskOnTestFailures: true
+  testResultSearchPath: "**/*.jtr.xml"
+  pool: {}
+  useContainer: {}
+
+jobs:
+  - job: openjdk_sanity
+    displayName: "Functional Sanity Check"
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      TEST_TARGET: ${{ parameters.testTarget }}
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnTestFailures }}
+      TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+
+    steps:
+      - template: ../test_steps.yml
