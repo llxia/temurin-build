@@ -1,0 +1,50 @@
+parameters:
+  buildList: "functional"
+  testTarget: "sanity.functional.regular"
+  failTaskOnTestFailures: true
+  testResultSearchPath: "**/*.jtr.xml"
+  pool: {}
+  useContainer: {}
+
+jobs:
+  - job: generate_parallelList
+    displayName: "Generate parallelList"
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      TEST_TARGET: ${{ parameters.testTarget }}
+      NUM_MACHINES: 5
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+
+    steps:
+      - template: ../parallel.yml
+
+  - job: sanity_functional
+    displayName: "sanity.functional"
+    dependsOn: generate_parallelList
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnTestFailures }}
+      TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+    strategy:
+      matrix:
+        testList_0:
+          TEST_TARGET: "-f parallelList.mk testList_0"
+          TEST_NAME: "testList_0"
+        testList_1:
+          TEST_TARGET: "-f parallelList.mk testList_1"
+          TEST_NAME: "testList_1"
+        testList_2:
+          TEST_TARGET: "-f parallelList.mk testList_2"
+          TEST_NAME: "testList_2"
+        testList_3:
+          TEST_TARGET: "-f parallelList.mk testList_3"
+          TEST_NAME: "testList_3"
+        testList_4:
+          TEST_TARGET: "-f parallelList.mk testList_4"
+          TEST_NAME: "testList_4"
+
+    steps:
+      - template: ../test_steps.yml

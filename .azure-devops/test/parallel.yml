@@ -1,0 +1,58 @@
+steps:
+
+
+    - script: |
+        brew update
+      displayName: 'Update brew'
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+    # Install macOS required dependencies
+    - script: |
+        set -e
+        brew install xmlstarlet ant ant-contrib tree gnu-sed
+      displayName: "macOS: install dependencies"
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+    - script: |
+        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/openjdkbinary/j2sdk-image";
+        echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
+        echo "##vso[task.setvariable variable=TKG_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/TKG"
+      displayName: "Set environment varaibles"
+    - script: |
+        echo "TEST_JDK_HOME ${TEST_JDK_HOME}";
+        echo "TEST_DIR ${TEST_DIR}";
+        echo "TKG_DIR ${TKG_DIR}";
+        echo "ADOPT_TEST_REPO_BRANCH ${ADOPT_TEST_REPO_BRANCH}";
+        echo "ADOPT_TEST_REPO_URI ${ADOPT_TEST_REPO_URI}";
+      displayName: "Print environment varaibles"
+    # clone openjdk-test repo
+    - script: |
+        cd $COMMON_TESTRESULTSDIRECTORY
+        git clone -b $ADOPT_TEST_REPO_BRANCH --depth 1 $ADOPT_TEST_REPO_URI
+      displayName: "Clone openjdk test repo"
+    # Get openj9 test framework and SDK
+    - script: |
+        cd $TEST_DIR
+        ls -alt
+        echo "./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -p x86-64_mac -r nightly";
+        ./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -p x86-64_mac -r nightly
+        if [ -f "job.properties" ]; then
+          TEST_JDK_HOME=`grep "TEST_JDK_HOME" job.properties | cut -d'=' -f2`
+          echo "TEST_JDK_HOME is set to $TEST_JDK_HOME"
+          echo "##vso[task.setvariable variable=TEST_JDK_HOME]$TEST_JDK_HOME";
+        fi
+        echo "TEST_JDK_HOME $TEST_JDK_HOME"
+      displayName: "Get openj9 test framework"
+
+    # Generate parallelList.mk
+    - script: |
+        echo "TEST_JDK_HOME $TEST_JDK_HOME"
+        cd $TKG_DIR
+        echo "make genParallelList TEST=$TEST_TARGET NUM_MACHINES=$NUM_MACHINES"
+        make genParallelList TEST=$TEST_TARGET NUM_MACHINES=$NUM_MACHINES
+      displayName: "make genParallelList"
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(TKG_DIR)/parallelList.mk
+        artifactName: parallelList.mk
+        displayName: "Publish parallelList.mk"
