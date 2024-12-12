@@ -79,4 +79,17 @@
             <impl>openj9</impl>
         </impls>
     </test>
+    <test>
+        <testCaseName>Release_Info_Check</testCaseName>
+        <command>cat $(TEST_JDK_HOME)/release; chmod 755 $(TEST_ROOT)/functional/buildAndPackage/scripts/releaseInfoCheck.sh; $(TEST_ROOT)/functional/buildAndPackage/scripts/releaseInfoCheck.sh</command>
+        <levels>
+            <level>extended</level>
+        </levels>
+        <groups>
+            <group>functional</group>
+        </groups>
+        <impls>
+            <impl>openj9</impl>
+        </impls>
+    </test>
 </playlist>
